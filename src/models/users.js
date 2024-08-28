@@ -21,7 +21,8 @@ const usersSchema = new Schema({
         type: String,
     },
     avatar: {
-        type: String,
+        type: Schema.Types.ObjectId,
+        ref: 'Photo'
     },
 });
 

@@ -2,18 +2,24 @@ const dotenv = require('dotenv').config();
 const { Router } = require('express');
 const UsersServices = require('../services/users');
 const User = require('../models/users');
-const usersRouter = Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const authJWT = require('../jwt/auth');
+const Photo = require('../models/photo');
+const multer = require('multer');
+
+const usersRouter = Router();
 const SECRET_KEY = dotenv.parsed.SECRET_KEY;
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 // Register
 usersRouter.post('/register', async (req, res) => {
     try {
-        const { username, email, password } = req.body;
+        const { username, email, password, avatar } = req.body;
         const hashedPassword = await bcrypt.hash(password, 10);
-        const user = new User({ username, email, password: hashedPassword });
+        const user = new User({ username, email, password: hashedPassword, avatar });
         await user.save();
         res.status(201).send('User registered successfully');
     } catch (error) {
@@ -36,6 +42,27 @@ usersRouter.post('/login', async (req, res) => {
         res.status(200).send({ message: 'Logged in successfully', token });
     } catch (error) {
         res.status(500).send({ message: 'Server error', error });
+    }
+});
+
+// Add Avatar
+usersRouter.post('/upload', upload.single('photo'), authJWT, async (req, res) => {
+    try {
+        const photo = new Photo({
+            data: req.file.buffer,
+            contentType: req.file.mimetype
+        });
+
+        const savedPhoto = await photo.save();
+
+        const user = await User.findOne({ _id: req.user });
+        user.avatar = savedPhoto._id;
+        await user.save();
+
+        res.status(201).send({ photo_id: savedPhoto._id });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Internal Server Error');
     }
 });
 
@@ -145,7 +172,6 @@ usersRouter.post('/unblock', authJWT, async (req, res) => {
         res.status(500).send({ message: `Failed to unblock user: ${error.message}` });
     }
 });
-
 
 
 module.exports = usersRouter;

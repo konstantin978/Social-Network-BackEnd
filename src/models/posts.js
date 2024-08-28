@@ -15,6 +15,7 @@ const postsSchema = new Schema({
     },
     author: {
         type: Schema.Types.ObjectId,
+        ref: 'User'
     },
     likes: {
         type: Number,

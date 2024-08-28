@@ -4,7 +4,6 @@ const usersSchema = require('../models/users');
 class PostsService {
     static getAllPosts = async () => {
         const response = await postsSchema.find({});
-        console.log(response);
 
         return response;
     };

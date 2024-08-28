@@ -63,6 +63,22 @@ usersRouter.post('/upload', upload.single('photo'), authJWT, async (req, res) =>
     } catch (err) {
         console.error(err);
         res.status(500).send('Internal Server Error');
+    };
+});
+
+usersRouter.get('/:photo_id', async (req, res) => {
+    try {
+        const photo = await Photo.findById(req.params.photo_id);
+
+        if (!photo) {
+            return res.status(404).send('Photo not found');
+        }
+
+        res.set('Content-Type', photo.contentType);
+        res.send(photo.data);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Internal Server Error');
     }
 });
 
